@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from flask import Flask, make_response, jsonify
+from flask import Flask, jsonify, make_response
 from flask_migrate import Migrate
 
 from models import db, Bakery, BakedGood
@@ -18,21 +18,36 @@ db.init_app(app)
 def index():
     return '<h1>Bakery GET API</h1>'
 
-@app.route('/bakeries')
+@app.route('/bakeries', methods=['GET'])
 def bakeries():
-    return ''
+    # Fetch all bakeries and serialize them to JSON
+    bakeries_list = [bakery.to_dict() for bakery in Bakery.query.all()]
+    response = make_response(jsonify(bakeries_list), 200)
+    return response
 
-@app.route('/bakeries/<int:id>')
+@app.route('/bakeries/<int:id>', methods=['GET'])
 def bakery_by_id(id):
-    return ''
+    # Fetch a specific bakery by ID and serialize it
+    bakery = Bakery.query.get_or_404(id)
+    response = make_response(jsonify(bakery.to_dict()), 200)
+    return response
 
-@app.route('/baked_goods/by_price')
+@app.route('/baked_goods/by_price', methods=['GET'])
 def baked_goods_by_price():
-    return ''
+    # Fetch all baked goods sorted by price in descending order
+    baked_goods_list = [baked_good.to_dict() for baked_good in BakedGood.query.order_by(BakedGood.price.desc()).all()]
+    response = make_response(jsonify(baked_goods_list), 200)
+    return response
 
-@app.route('/baked_goods/most_expensive')
+@app.route('/baked_goods/most_expensive', methods=['GET'])
 def most_expensive_baked_good():
-    return ''
+    # Fetch the most expensive baked good
+    most_expensive = BakedGood.query.order_by(BakedGood.price.desc()).limit(1).one_or_none()
+    if most_expensive:
+        response = make_response(jsonify(most_expensive.to_dict()), 200)
+        return response
+    else:
+        return make_response(jsonify({'message': 'No baked goods found'}), 404)
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
